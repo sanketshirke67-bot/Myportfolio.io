@@ -819,3 +819,26 @@ document.addEventListener('keydown', (e) => {
     card.querySelector('h3').appendChild(langBadge);
     
     // ... rest of the code (details, toggle button, etc.)
+    // Day 27: Animated back to top with progress ring
+backToTopBtn.addEventListener('click', () => {
+  const start = window.scrollY;
+  const duration = 500;
+  const startTime = performance.now();
+
+  function animateScroll(now) {
+    const elapsed = now - startTime;
+    const progress = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease out
+    window.scrollTo(0, start * (1 - ease));
+    // Update progress ring during scroll
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const percent = (window.scrollY / docHeight) * 100;
+    setProgress(percent);
+    if (progress < 1) {
+      requestAnimationFrame(animateScroll);
+    } else {
+      setProgress(0);
+    }
+  }
+  requestAnimationFrame(animateScroll);
+});
