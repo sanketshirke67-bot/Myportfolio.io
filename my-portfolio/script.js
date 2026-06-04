@@ -842,3 +842,10 @@ backToTopBtn.addEventListener('click', () => {
   }
   requestAnimationFrame(animateScroll);
 });
+    // Day 28: Double-click to open repo
+    card.addEventListener('dblclick', () => {
+      window.open(repo.html_url, '_blank');
+      showToast(`🔗 Opening ${repo.name}...`, 'success');
+    });
+    
+    card.innerHTML = `...`;
