@@ -1155,3 +1155,19 @@ body.light-mode .toast {
 body.light-mode .lang-badge {
   background: rgba(233, 69, 96, 0.1);
 }
+/* Last commit date */
+.last-commit-date {
+  font-size: 0.7rem;
+  color: #888;
+  margin-top: 10px;
+  text-align: center;
+  border-top: 1px solid rgba(233, 69, 96, 0.2);
+  padding-top: 8px;
+}
+body.light-mode .last-commit-date {
+  color: #666;
+}
+.last-commit-date i {
+  margin-right: 5px;
+  color: #e94560;
+}

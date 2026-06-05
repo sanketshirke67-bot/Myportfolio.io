@@ -849,3 +849,9 @@ backToTopBtn.addEventListener('click', () => {
     });
     
     card.innerHTML = `...`;
+    // Day 29: Add last commit date
+    const lastCommitDate = new Date(repo.updated_at);
+    const dateElem = document.createElement('div');
+    dateElem.className = 'last-commit-date';
+    dateElem.innerHTML = `<i class="far fa-calendar-alt"></i> ${lastCommitDate.toLocaleDateString()}`;
+    card.appendChild(dateElem);
