@@ -855,3 +855,21 @@ backToTopBtn.addEventListener('click', () => {
     dateElem.className = 'last-commit-date';
     dateElem.innerHTML = `<i class="far fa-calendar-alt"></i> ${lastCommitDate.toLocaleDateString()}`;
     card.appendChild(dateElem);
+// Day 30: Export streak data as JSON
+const exportBtn = document.getElementById('export-streak-btn');
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    const data = getStreakData();
+    const dataStr = JSON.stringify(data, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `streak-data-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('📁 Streak data exported!', 'success');
+  });
+}

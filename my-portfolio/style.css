@@ -1171,3 +1171,15 @@ body.light-mode .last-commit-date {
   margin-right: 5px;
   color: #e94560;
 }
+.streak-actions {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+.export-btn {
+  background: #6c5ce7;
+}
+.export-btn:hover {
+  background: #5a4ace;
+}
