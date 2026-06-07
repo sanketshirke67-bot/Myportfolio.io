@@ -1183,3 +1183,9 @@ body.light-mode .last-commit-date {
 .export-btn:hover {
   background: #5a4ace;
 }
+.last-synced {
+  text-align: center;
+  font-size: 0.75rem;
+  color: #888;
+  margin-top: 5px;
+}

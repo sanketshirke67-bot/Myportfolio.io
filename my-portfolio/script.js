@@ -886,3 +886,19 @@ if (storedSync && document.getElementById('last-synced')) {
   const syncDate = new Date(storedSync);
   document.getElementById('last-synced').textContent = `🔄 Last synced: ${syncDate.toLocaleString()}`;
 }
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  
+  // Day 32: Click to dismiss
+  toast.addEventListener('click', () => {
+    toast.remove();
+  });
+  
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentNode) toast.remove();
+  }, 4000);
+}
