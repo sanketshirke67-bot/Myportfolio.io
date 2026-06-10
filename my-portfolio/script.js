@@ -1,32 +1,46 @@
-// ==================== INITIAL SETUP ====================
+// Helper: Toast notifications (Day 32: click to dismiss)
+function showToast(message, type = 'success') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  toast.addEventListener('click', () => toast.remove());
+  container.appendChild(toast);
+  setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4000);
+}
+
+// Mobile menu toggle
 const hamburger = document.getElementById('hamburger');
 const navLinks = document.querySelector('.nav-links');
-hamburger.addEventListener('click', () => {
-  hamburger.classList.toggle('active');
-  navLinks.classList.toggle('active');
-});
+if (hamburger) {
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    navLinks.classList.toggle('active');
+  });
+}
 document.querySelectorAll('.nav-links a').forEach(link => {
   link.addEventListener('click', () => {
     hamburger.classList.remove('active');
     navLinks.classList.remove('active');
   });
 });
+
+// Smooth scroll for anchor links
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
   anchor.addEventListener('click', function(e) {
     const targetId = this.getAttribute('href').substring(1);
-    if (targetId === '') return;
-    const targetElement = document.getElementById(targetId);
-    if (targetElement) {
+    if (targetId) {
       e.preventDefault();
-      targetElement.scrollIntoView({ behavior: 'smooth' });
+      const target = document.getElementById(targetId);
+      if (target) target.scrollIntoView({ behavior: 'smooth' });
     }
   });
 });
-document.getElementById('hero-btn').addEventListener('click', () => {
+document.getElementById('hero-btn')?.addEventListener('click', () => {
   document.getElementById('projects').scrollIntoView({ behavior: 'smooth' });
 });
 
-// ==================== DARK/LIGHT MODE ====================
+// Dark mode with system preference and 'D' key
 const toggleBtn = document.getElementById('theme-toggle');
 const body = document.body;
 const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -41,57 +55,44 @@ if (savedTheme === 'light') {
 }
 toggleBtn.addEventListener('click', () => {
   body.classList.toggle('light-mode');
-  if (body.classList.contains('light-mode')) {
-    localStorage.setItem('theme', 'light');
-    toggleBtn.textContent = '☀️';
-  } else {
-    localStorage.setItem('theme', 'dark');
-    toggleBtn.textContent = '🌙';
-  }
+  const isLight = body.classList.contains('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  toggleBtn.textContent = isLight ? '☀️' : '🌙';
 });
 
-// Keyboard shortcut 'd' for dark mode
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'd' || e.key === 'D') {
-    e.preventDefault();
-    document.getElementById('theme-toggle').click();
-    showToast('🌓 Dark mode toggled with keyboard', 'success');
-  }
-});
-
-// ==================== TYPING ANIMATION ====================
+// Typing animation
 const typingText = document.querySelector('.typing-text');
 const phrases = ["I build websites.", "I love coding.", "I learn every day.", "Welcome to my portfolio!"];
-let phraseIndex = 0, charIndex = 0, isDeleting = false;
+let phraseIdx = 0, charIdx = 0, deleting = false;
 function typeEffect() {
-  const currentPhrase = phrases[phraseIndex];
-  if (isDeleting) {
-    typingText.textContent = currentPhrase.substring(0, charIndex - 1);
-    charIndex--;
+  const current = phrases[phraseIdx];
+  if (deleting) {
+    typingText.textContent = current.substring(0, charIdx - 1);
+    charIdx--;
   } else {
-    typingText.textContent = currentPhrase.substring(0, charIndex + 1);
-    charIndex++;
+    typingText.textContent = current.substring(0, charIdx + 1);
+    charIdx++;
   }
-  if (!isDeleting && charIndex === currentPhrase.length) {
-    isDeleting = true;
+  if (!deleting && charIdx === current.length) {
+    deleting = true;
     setTimeout(typeEffect, 2000);
-  } else if (isDeleting && charIndex === 0) {
-    isDeleting = false;
-    phraseIndex = (phraseIndex + 1) % phrases.length;
+  } else if (deleting && charIdx === 0) {
+    deleting = false;
+    phraseIdx = (phraseIdx + 1) % phrases.length;
     setTimeout(typeEffect, 500);
   } else {
-    setTimeout(typeEffect, isDeleting ? 50 : 100);
+    setTimeout(typeEffect, deleting ? 50 : 100);
   }
 }
 typeEffect();
 
-// ==================== STATS COUNTER ====================
+// Stats counter
 const statNumbers = document.querySelectorAll('.stat-number:not(#visitor-count)');
 const statObserver = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
       const target = entry.target;
-      const targetNumber = parseInt(target.getAttribute('data-target'));
+      const targetNumber = parseInt(target.dataset.target);
       let current = 0;
       const increment = targetNumber / 50;
       const interval = setInterval(() => {
@@ -109,12 +110,12 @@ const statObserver = new IntersectionObserver((entries) => {
 }, { threshold: 0.5 });
 statNumbers.forEach(stat => statObserver.observe(stat));
 
-// ==================== CIRCULAR SKILLS ====================
-const circularProgresses = document.querySelectorAll('.circular-progress');
-const circularObserver = new IntersectionObserver((entries) => {
+// Circular skills
+const circles = document.querySelectorAll('.circular-progress');
+const circObs = new IntersectionObserver((entries) => {
   entries.forEach(entry => {
     if (entry.isIntersecting) {
-      const progress = entry.target.getAttribute('data-progress');
+      const progress = entry.target.dataset.progress;
       const percentSpan = entry.target.querySelector('.skill-percent');
       let currentPercent = 0;
       const targetPercent = parseInt(progress);
@@ -122,85 +123,74 @@ const circularObserver = new IntersectionObserver((entries) => {
       const interval = setInterval(() => {
         if (currentPercent < targetPercent) {
           currentPercent += increment;
-          const percentVal = Math.min(Math.floor(currentPercent), targetPercent);
-          percentSpan.textContent = percentVal + '%';
-          const deg = (percentVal / 100) * 360;
+          const val = Math.min(Math.floor(currentPercent), targetPercent);
+          percentSpan.textContent = val + '%';
+          const deg = (val / 100) * 360;
           entry.target.style.background = `conic-gradient(#e94560 ${deg}deg, ${body.classList.contains('light-mode') ? '#ddd' : '#333'} ${deg}deg)`;
         } else {
           percentSpan.textContent = targetPercent + '%';
-          const deg = targetPercent / 100 * 360;
+          const deg = (targetPercent / 100) * 360;
           entry.target.style.background = `conic-gradient(#e94560 ${deg}deg, ${body.classList.contains('light-mode') ? '#ddd' : '#333'} ${deg}deg)`;
           clearInterval(interval);
         }
       }, 20);
-      circularObserver.unobserve(entry.target);
+      circObs.unobserve(entry.target);
     }
   });
 }, { threshold: 0.5 });
-circularProgresses.forEach(progress => circularObserver.observe(progress));
+circles.forEach(c => circObs.observe(c));
 
-// ==================== GITHUB PROJECTS ====================
+// ========== GitHub Projects ==========
 const githubUsername = 'sanketshirke67-bot'; // CHANGE TO YOUR USERNAME
-const projectsContainer = document.getElementById('github-projects');
 let allRepos = [];
 let displayedCount = 6;
-const loadMoreBtn = document.getElementById('load-more-btn');
-const searchInput = document.getElementById('project-search');
 let currentFilter = 'all';
 let currentSearch = '';
+const projectsContainer = document.getElementById('github-projects');
+const loadMoreBtn = document.getElementById('load-more-btn');
+const searchInput = document.getElementById('project-search');
 
 async function fetchGitHubRepos() {
   projectsContainer.innerHTML = '';
   for (let i = 0; i < 6; i++) {
-    const skeleton = document.createElement('div');
-    skeleton.className = 'skeleton-card';
-    projectsContainer.appendChild(skeleton);
+    const sk = document.createElement('div');
+    sk.className = 'skeleton-card';
+    projectsContainer.appendChild(sk);
   }
   try {
-    const response = await fetch(`https://api.github.com/users/${githubUsername}/repos?sort=updated&per_page=100`);
-    if (!response.ok) throw new Error('GitHub API error');
-    allRepos = await response.json();
+    const res = await fetch(`https://api.github.com/users/${githubUsername}/repos?sort=updated&per_page=100`);
+    if (!res.ok) throw new Error();
+    allRepos = await res.json();
     displayedCount = 6;
     applyFiltersAndRender();
-    const lastUpdatedSpan = document.getElementById('last-updated');
-    if (lastUpdatedSpan) {
-      const now = new Date();
-      lastUpdatedSpan.textContent = `Last updated: ${now.toLocaleString()}`;
-    }
-    if (allRepos.length > 0) {
+    const syncTime = new Date();
+    localStorage.setItem('lastProjectsSync', syncTime.toISOString());
+    const lastSyncedDiv = document.getElementById('last-synced');
+    if (lastSyncedDiv) lastSyncedDiv.textContent = `🔄 Last synced: ${syncTime.toLocaleString()}`;
+    if (allRepos.length) {
       const sorted = [...allRepos].sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
       const latest = sorted[0];
-      const updatedDate = new Date(latest.updated_at);
-      const timeAgo = Math.floor((Date.now() - updatedDate) / 1000 / 60 / 60 / 24);
-      const daysAgo = timeAgo === 0 ? 'today' : `${timeAgo} day${timeAgo !== 1 ? 's' : ''} ago`;
-      const latestRepoDiv = document.getElementById('last-updated-repo');
-      if (latestRepoDiv) {
-        latestRepoDiv.innerHTML = `📦 Most recent update: <strong>${latest.name}</strong> – ${daysAgo} (${updatedDate.toLocaleDateString()})`;
-      }
+      const daysAgo = Math.floor((Date.now() - new Date(latest.updated_at)) / 86400000);
+      const latestDiv = document.getElementById('last-updated-repo');
+      if (latestDiv) latestDiv.innerHTML = `📦 Most recent update: <strong>${latest.name}</strong> – ${daysAgo === 0 ? 'today' : `${daysAgo} day${daysAgo !== 1 ? 's' : ''} ago`}`;
     }
-  } catch (error) {
-    projectsContainer.innerHTML = '<div class="loader">Failed to load GitHub projects. Please check your username or try again later.</div>';
+  } catch (e) {
+    projectsContainer.innerHTML = '<div class="loader">Failed to load projects</div>';
   }
 }
-function filterReposByLanguage(repos, language) {
-  if (language === 'all') return repos;
-  return repos.filter(repo => repo.language === language);
-}
-function filterReposBySearch(repos, query) {
-  if (!query) return repos;
-  const lowerQuery = query.toLowerCase();
-  return repos.filter(repo => repo.name.toLowerCase().includes(lowerQuery) || (repo.description && repo.description.toLowerCase().includes(lowerQuery)));
-}
-function getFilteredRepos() {
-  let filtered = filterReposByLanguage(allRepos, currentFilter);
-  filtered = filterReposBySearch(filtered, currentSearch);
+
+function filterRepos() {
+  let filtered = allRepos;
+  if (currentFilter !== 'all') filtered = filtered.filter(r => r.language === currentFilter);
+  if (currentSearch) filtered = filtered.filter(r => r.name.toLowerCase().includes(currentSearch) || (r.description && r.description.toLowerCase().includes(currentSearch)));
   return filtered;
 }
+
 function renderProjects() {
-  const filtered = getFilteredRepos();
+  const filtered = filterRepos();
   const toDisplay = filtered.slice(0, displayedCount);
   if (toDisplay.length === 0) {
-    projectsContainer.innerHTML = '<div class="loader">No projects match your criteria.</div>';
+    projectsContainer.innerHTML = '<div class="loader">No projects match</div>';
     loadMoreBtn.style.display = 'none';
     return;
   }
@@ -209,12 +199,24 @@ function renderProjects() {
     const card = document.createElement('div');
     card.classList.add('project-card');
     card.setAttribute('data-language', repo.language || 'Unknown');
-    card.innerHTML = `<i class="fab fa-github"></i><h3>${repo.name}</h3><p>${repo.description || 'No description provided.'}</p><a href="${repo.html_url}" target="_blank">View on GitHub →</a>`;
+    card.innerHTML = `<i class="fab fa-github"></i><h3>${repo.name}</h3><p>${repo.description || 'No description'}</p><a href="${repo.html_url}" target="_blank">View on GitHub →</a>`;
+    
+    // Language badge
+    const badge = document.createElement('span');
+    badge.className = 'lang-badge';
+    badge.textContent = repo.language || 'Unknown';
+    card.querySelector('h3').appendChild(badge);
+    
+    // Last commit date
+    const commitDiv = document.createElement('div');
+    commitDiv.className = 'last-commit-date';
+    commitDiv.innerHTML = `<i class="far fa-calendar-alt"></i> ${new Date(repo.updated_at).toLocaleDateString()}`;
+    card.appendChild(commitDiv);
+    
+    // Details toggle
     const detailsDiv = document.createElement('div');
     detailsDiv.className = 'project-details';
-    const stars = repo.stargazers_count || 0;
-    const forks = repo.forks_count || 0;
-    detailsDiv.innerHTML = `⭐ ${stars} stars | 🍴 ${forks} forks<br>🕒 Updated: ${new Date(repo.updated_at).toLocaleDateString()}`;
+    detailsDiv.innerHTML = `⭐ ${repo.stargazers_count || 0} stars | 🍴 ${repo.forks_count || 0} forks<br>🕒 Updated: ${new Date(repo.updated_at).toLocaleString()}`;
     const toggleBtn = document.createElement('button');
     toggleBtn.textContent = '📋 Show details';
     toggleBtn.className = 'toggle-details-btn';
@@ -224,450 +226,153 @@ function renderProjects() {
     });
     card.appendChild(toggleBtn);
     card.appendChild(detailsDiv);
+    
+    // Double-click to open repo
+    card.addEventListener('dblclick', () => {
+      window.open(repo.html_url, '_blank');
+      showToast(`🔗 Opening ${repo.name}...`, 'success');
+    });
+    
+    // Click on repo name to copy
+    const h3 = card.querySelector('h3');
+    h3.style.cursor = 'pointer';
+    h3.addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigator.clipboard.writeText(repo.name).then(() => showToast(`📋 Copied "${repo.name}"`, 'success')).catch(() => showToast('Failed', 'error'));
+    });
+    
     projectsContainer.appendChild(card);
   });
-  if (filtered.length > displayedCount) loadMoreBtn.style.display = 'inline-block';
-  else loadMoreBtn.style.display = 'none';
+  loadMoreBtn.style.display = filtered.length > displayedCount ? 'inline-block' : 'none';
 }
+
 function applyFiltersAndRender() {
   displayedCount = 6;
   renderProjects();
 }
 function loadMore() {
-  const filtered = getFilteredRepos();
+  const filtered = filterRepos();
   if (displayedCount < filtered.length) {
     displayedCount += 6;
     renderProjects();
   }
 }
-const filterBtns = document.querySelectorAll('.filter-btn');
-filterBtns.forEach(btn => {
+document.querySelectorAll('.filter-btn').forEach(btn => {
   btn.addEventListener('click', () => {
-    filterBtns.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
-    currentFilter = btn.getAttribute('data-filter');
+    currentFilter = btn.dataset.filter;
     applyFiltersAndRender();
   });
 });
-searchInput.addEventListener('input', (e) => {
+searchInput?.addEventListener('input', e => {
   currentSearch = e.target.value;
   applyFiltersAndRender();
 });
-loadMoreBtn.addEventListener('click', loadMore);
+loadMoreBtn?.addEventListener('click', loadMore);
 fetchGitHubRepos();
 
-// Random Project Button
+// Random project button and 'R' key
 const randomBtn = document.getElementById('random-project-btn');
-if (randomBtn) {
-  randomBtn.addEventListener('click', () => {
-    if (!allRepos || allRepos.length === 0) {
-      showToast('Projects not loaded yet. Please wait.', 'error');
-      return;
-    }
-    const randomIndex = Math.floor(Math.random() * allRepos.length);
-    const randomRepo = allRepos[randomIndex];
-    window.open(randomRepo.html_url, '_blank');
-    showToast(`Opening random project: ${randomRepo.name}`, 'success');
-  });
+function openRandomProject() {
+  if (!allRepos.length) { showToast('Projects not loaded yet', 'error'); return; }
+  const rand = allRepos[Math.floor(Math.random() * allRepos.length)];
+  window.open(rand.html_url, '_blank');
+  showToast(`🎲 Opening random: ${rand.name}`, 'success');
 }
+randomBtn?.addEventListener('click', openRandomProject);
 
-// ==================== TESTIMONIALS CAROUSEL ====================
-const slides = document.querySelectorAll('.testimonial-card');
-const slideContainer = document.querySelector('.carousel-slide');
-const prevBtn = document.querySelector('.carousel-prev');
-const nextBtn = document.querySelector('.carousel-next');
-const dotsContainer = document.querySelector('.carousel-dots');
-let currentIndex = 0;
-let slideInterval;
-function updateCarousel() {
-  const slideWidth = slides[0].clientWidth;
-  slideContainer.style.transform = `translateX(-${currentIndex * slideWidth}px)`;
-  updateDots();
-}
-function updateDots() {
-  const dots = document.querySelectorAll('.dot');
-  dots.forEach((dot, idx) => {
-    if (idx === currentIndex) dot.classList.add('active');
-    else dot.classList.remove('active');
-  });
-}
-function createDots() {
-  dotsContainer.innerHTML = '';
-  slides.forEach((_, idx) => {
-    const dot = document.createElement('span');
-    dot.classList.add('dot');
-    if (idx === currentIndex) dot.classList.add('active');
-    dot.addEventListener('click', () => {
-      clearInterval(slideInterval);
-      currentIndex = idx;
-      updateCarousel();
-      startAutoSlide();
-    });
-    dotsContainer.appendChild(dot);
-  });
-}
-function nextSlide() {
-  currentIndex = (currentIndex + 1) % slides.length;
-  updateCarousel();
-}
-function prevSlide() {
-  currentIndex = (currentIndex - 1 + slides.length) % slides.length;
-  updateCarousel();
-}
-function startAutoSlide() {
-  slideInterval = setInterval(() => { nextSlide(); }, 5000);
-}
-prevBtn.addEventListener('click', () => { clearInterval(slideInterval); prevSlide(); startAutoSlide(); });
-nextBtn.addEventListener('click', () => { clearInterval(slideInterval); nextSlide(); startAutoSlide(); });
-window.addEventListener('resize', () => { updateCarousel(); });
-createDots();
-startAutoSlide();
-
-// ==================== PARTICLE BACKGROUND ====================
-const canvas = document.getElementById('particle-canvas');
-const ctx = canvas.getContext('2d');
-let particles = [];
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resizeCanvas);
-resizeCanvas();
-class Particle {
-  constructor() {
-    this.x = Math.random() * canvas.width;
-    this.y = Math.random() * canvas.height;
-    this.size = Math.random() * 3 + 1;
-    this.speedX = (Math.random() - 0.5) * 1;
-    this.speedY = (Math.random() - 0.5) * 1;
-    this.color = `rgba(233, 69, 96, ${Math.random() * 0.5 + 0.2})`;
-  }
-  update() {
-    this.x += this.speedX;
-    this.y += this.speedY;
-    if (this.x < 0) this.x = canvas.width;
-    if (this.x > canvas.width) this.x = 0;
-    if (this.y < 0) this.y = canvas.height;
-    if (this.y > canvas.height) this.y = 0;
-  }
-  draw() {
-    ctx.beginPath();
-    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    ctx.fillStyle = this.color;
-    ctx.fill();
-  }
-}
-function initParticles() {
-  particles = [];
-  for (let i = 0; i < 100; i++) particles.push(new Particle());
-}
-initParticles();
-function animateParticles() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  particles.forEach(p => { p.update(); p.draw(); });
-  requestAnimationFrame(animateParticles);
-}
-animateParticles();
-
-// ==================== BACK TO TOP & SCROLL PROGRESS ====================
-const backToTopBtn = document.getElementById('back-to-top');
-window.addEventListener('scroll', () => {
-  if (window.scrollY > 300) backToTopBtn.style.display = 'flex';
-  else backToTopBtn.style.display = 'none';
-});
-backToTopBtn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
-const progressCircle = document.querySelector('.progress-ring-circle');
-const scrollPercentSpan = document.querySelector('.scroll-percent');
-const radius = 26;
-const circumference = 2 * Math.PI * radius;
-progressCircle.style.strokeDasharray = `${circumference}`;
-progressCircle.style.strokeDashoffset = circumference;
-function setProgress(percent) {
-  const offset = circumference - (percent / 100) * circumference;
-  progressCircle.style.strokeDashoffset = offset;
-  scrollPercentSpan.textContent = `${Math.floor(percent)}%`;
-}
-window.addEventListener('scroll', () => {
-  const scrollTop = window.scrollY;
-  const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-  const percent = (scrollTop / docHeight) * 100;
-  setProgress(percent);
-});
-document.querySelector('.scroll-progress').addEventListener('click', () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-});
-
-// ==================== SCROLL ANIMATIONS ====================
-const fadeElements = document.querySelectorAll('section, .skill-card, .project-card, .timeline-item, .blog-card');
-fadeElements.forEach(el => el.classList.add('fade-in'));
-const fadeObserver = new IntersectionObserver((entries) => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.classList.add('appear');
-      fadeObserver.unobserve(entry.target);
-    }
-  });
-}, { threshold: 0.1 });
-fadeElements.forEach(el => fadeObserver.observe(el));
-
-// ==================== VISITOR COUNTER ====================
-async function updateVisitorCount() {
-  const visitorSpan = document.getElementById('visitor-count');
-  const namespace = 'sanket_portfolio_day21';
-  const key = 'visitors';
-  try {
-    const response = await fetch(`https://api.countapi.xyz/hit/${namespace}/${key}`);
-    const data = await response.json();
-    visitorSpan.textContent = data.value;
-  } catch (error) {
-    console.error('Visitor counter failed', error);
-    visitorSpan.textContent = '?';
-  }
-}
-updateVisitorCount();
-
-// ==================== VISIT MESSAGE (localStorage) ====================
-function updateVisitMessage() {
-  const visitSpan = document.getElementById('visit-message');
-  if (!visitSpan) return;
-  let count = localStorage.getItem('portfolioVisitCount');
-  if (count === null) {
-    count = 1;
-    visitSpan.textContent = '✨ Welcome! Thanks for visiting my portfolio. ✨';
-  } else {
-    count = parseInt(count) + 1;
-    visitSpan.textContent = `👋 Welcome back! You've visited this page ${count} time${count !== 1 ? 's' : ''}.`;
-  }
-  localStorage.setItem('portfolioVisitCount', count);
-}
-updateVisitMessage();
-
-// ==================== TOAST NOTIFICATION ====================
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => toast.remove(), 4000);
-}
-
-// ==================== EMAILJS CONTACT FORM ====================
-emailjs.init({ publicKey: 'YOUR_PUBLIC_KEY' }); // Replace with your EmailJS public key
-const contactForm = document.getElementById('contact-form');
-contactForm.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const name = document.getElementById('name').value.trim();
-  const email = document.getElementById('email').value.trim();
-  const message = document.getElementById('message').value.trim();
-  if (!name || !email || !message) {
-    showToast('Please fill in all fields.', 'error');
-    return;
-  }
-  const templateParams = { from_name: name, from_email: email, message: message, to_name: 'Sanket' };
-  try {
-    const response = await emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', templateParams);
-    if (response.status === 200) {
-      showToast('Message sent successfully! I\'ll get back to you soon.', 'success');
-      contactForm.reset();
-    } else throw new Error('EmailJS error');
-  } catch (error) {
-    console.error('EmailJS error:', error);
-    showToast('Oops! Failed to send. Please try again later.', 'error');
-  }
-});
-
-// Copy email button
-const copyEmailBtn = document.getElementById('copy-email-btn');
-if (copyEmailBtn) {
-  copyEmailBtn.addEventListener('click', async () => {
-    const myEmail = 'sanketshirke67@gmail.com'; // Replace with your email
-    try {
-      await navigator.clipboard.writeText(myEmail);
-      showToast('📧 Email copied to clipboard!', 'success');
-    } catch (err) {
-      showToast('Failed to copy email. Please try again.', 'error');
-    }
-  });
-}
-
-// Copy link button
-const copyLinkBtn = document.getElementById('copy-link-btn');
-if (copyLinkBtn) {
-  copyLinkBtn.addEventListener('click', async () => {
-    const url = window.location.href;
-    try {
-      await navigator.clipboard.writeText(url);
-      showToast('📋 Page link copied to clipboard!', 'success');
-    } catch (err) {
-      showToast('Failed to copy link. Please try again.', 'error');
-    }
-  });
-}
-
-// Easter egg: triple click logo
-let clickCount = 0;
-let clickTimer = null;
-const logo = document.querySelector('.logo');
-if (logo) {
-  logo.addEventListener('click', () => {
-    clickCount++;
-    logo.classList.add('logo-pulse');
-    setTimeout(() => logo.classList.remove('logo-pulse'), 300);
-    clearTimeout(clickTimer);
-    clickTimer = setTimeout(() => { clickCount = 0; }, 800);
-    if (clickCount === 3) {
-      showToast('🎉 You found the secret! 🎉 Keep learning and building! 🚀', 'success');
-      clickCount = 0;
-    }
-  });
-}
-
-// ==================== CUSTOM CURSOR ====================
-const cursor = document.querySelector('.cursor');
-const cursorFollower = document.querySelector('.cursor-follower');
-document.addEventListener('mousemove', (e) => {
-  cursor.style.left = e.clientX + 'px';
-  cursor.style.top = e.clientY + 'px';
-  cursorFollower.style.left = e.clientX + 'px';
-  cursorFollower.style.top = e.clientY + 'px';
-});
-document.addEventListener('mouseleave', () => {
-  cursor.style.display = 'none';
-  cursorFollower.style.display = 'none';
-});
-document.addEventListener('mouseenter', () => {
-  cursor.style.display = 'block';
-  cursorFollower.style.display = 'block';
-});
-
-// ==================== GITHUB ACTIVITY ====================
+// ========== GitHub Activity ==========
 const repoInput = document.getElementById('repo-input');
 const refreshBtn = document.getElementById('refresh-activity');
-const prOpenSpan = document.getElementById('pr-open');
-const prClosedSpan = document.getElementById('pr-closed');
-const prProgressBar = document.getElementById('pr-progress');
-const issuesOpenSpan = document.getElementById('issues-open');
-const issuesClosedSpan = document.getElementById('issues-closed');
-const issuesProgressBar = document.getElementById('issues-progress');
-const reviewReviewedSpan = document.getElementById('review-reviewed');
-const reviewPendingSpan = document.getElementById('review-pending');
-const reviewProgressBar = document.getElementById('review-progress');
-
-const demoPRs = { open: 3, closed: 7 };
-const demoIssues = { open: 2, closed: 5 };
-const demoReviews = { reviewed: 2, pending: 1 };
-
-const GITHUB_TOKEN = 'YOUR_GITHUB_TOKEN'; // Optional – replace if you have a token
-
-async function githubFetch(url, token = null) {
-  const headers = { 'Accept': 'application/vnd.github.v3+json' };
-  if (token && token !== 'YOUR_GITHUB_TOKEN') {
-    headers['Authorization'] = `token ${token}`;
-  }
-  const response = await fetch(url, { headers });
-  if (!response.ok) throw new Error(`GitHub API error: ${response.status}`);
-  return response.json();
-}
+const prOpenSpan = document.getElementById('pr-open'), prClosedSpan = document.getElementById('pr-closed'), prProgress = document.getElementById('pr-progress');
+const issuesOpenSpan = document.getElementById('issues-open'), issuesClosedSpan = document.getElementById('issues-closed'), issuesProgress = document.getElementById('issues-progress');
+const revReviewed = document.getElementById('review-reviewed'), revPending = document.getElementById('review-pending'), revProgress = document.getElementById('review-progress');
+const demoPRs = { open: 3, closed: 7 }, demoIssues = { open: 2, closed: 5 }, demoReviews = { reviewed: 2, pending: 1 };
 
 async function fetchGitHubActivity() {
   const repo = repoInput.value.trim();
-  if (!repo) {
-    showToast('Please enter a repository (format: owner/repo)', 'error');
-    return;
-  }
-  prOpenSpan.textContent = '...';
-  prClosedSpan.textContent = '...';
-  issuesOpenSpan.textContent = '...';
-  issuesClosedSpan.textContent = '...';
-  reviewReviewedSpan.textContent = '...';
-  reviewPendingSpan.textContent = '...';
+  if (!repo) return showToast('Enter owner/repo', 'error');
+  prOpenSpan.textContent = '...'; prClosedSpan.textContent = '...'; issuesOpenSpan.textContent = '...'; issuesClosedSpan.textContent = '...';
+  revReviewed.textContent = '...'; revPending.textContent = '...';
   try {
-    const prs = await githubFetch(`https://api.github.com/repos/${repo}/pulls?state=all&per_page=100`, GITHUB_TOKEN);
-    const issuesData = await githubFetch(`https://api.github.com/repos/${repo}/issues?state=all&per_page=100&filter=all`, GITHUB_TOKEN);
-    const issues = issuesData.filter(issue => !issue.pull_request);
-    let openPRs = prs.filter(pr => pr.state === 'open');
-    let closedPRs = prs.filter(pr => pr.state === 'closed');
-    let openIssues = issues.filter(issue => issue.state === 'open');
-    let closedIssues = issues.filter(issue => issue.state === 'closed');
-    const hasRealPRs = openPRs.length + closedPRs.length > 0;
-    const hasRealIssues = openIssues.length + closedIssues.length > 0;
+    const prs = await (await fetch(`https://api.github.com/repos/${repo}/pulls?state=all&per_page=100`)).json();
+    const issuesData = await (await fetch(`https://api.github.com/repos/${repo}/issues?state=all&per_page=100`)).json();
+    const issues = issuesData.filter(i => !i.pull_request);
+    let openPRs = prs.filter(p => p.state === 'open'), closedPRs = prs.filter(p => p.state === 'closed');
+    let openIssues = issues.filter(i => i.state === 'open'), closedIssues = issues.filter(i => i.state === 'closed');
+    const hasRealPRs = openPRs.length + closedPRs.length > 0, hasRealIssues = openIssues.length + closedIssues.length > 0;
     if (!hasRealPRs) { openPRs = demoPRs.open; closedPRs = demoPRs.closed; }
     if (!hasRealIssues) { openIssues = demoIssues.open; closedIssues = demoIssues.closed; }
     prOpenSpan.textContent = typeof openPRs === 'number' ? openPRs : openPRs.length;
     prClosedSpan.textContent = typeof closedPRs === 'number' ? closedPRs : closedPRs.length;
     const prTotal = (typeof openPRs === 'number' ? openPRs : openPRs.length) + (typeof closedPRs === 'number' ? closedPRs : closedPRs.length);
-    const prPercent = prTotal === 0 ? 0 : ((typeof closedPRs === 'number' ? closedPRs : closedPRs.length) / prTotal) * 100;
-    prProgressBar.style.width = `${prPercent}%`;
+    prProgress.style.width = prTotal === 0 ? 0 : ((typeof closedPRs === 'number' ? closedPRs : closedPRs.length) / prTotal * 100) + '%';
     issuesOpenSpan.textContent = typeof openIssues === 'number' ? openIssues : openIssues.length;
     issuesClosedSpan.textContent = typeof closedIssues === 'number' ? closedIssues : closedIssues.length;
     const issuesTotal = (typeof openIssues === 'number' ? openIssues : openIssues.length) + (typeof closedIssues === 'number' ? closedIssues : closedIssues.length);
-    const issuesPercent = issuesTotal === 0 ? 0 : ((typeof closedIssues === 'number' ? closedIssues : closedIssues.length) / issuesTotal) * 100;
-    issuesProgressBar.style.width = `${issuesPercent}%`;
-    let reviewedPRs = 0, pendingPRs = 0;
+    issuesProgress.style.width = issuesTotal === 0 ? 0 : ((typeof closedIssues === 'number' ? closedIssues : closedIssues.length) / issuesTotal * 100) + '%';
+    let reviewed = 0, pending = 0;
     if (hasRealPRs && openPRs.length > 0) {
-      const reviewPromises = openPRs.slice(0, 30).map(async (pr) => {
+      const reviewPromises = openPRs.slice(0, 30).map(async pr => {
         try {
-          const reviews = await githubFetch(pr.url + '/reviews', GITHUB_TOKEN);
-          return reviews.length > 0 ? 1 : 0;
-        } catch (err) { return 0; }
+          const revs = await (await fetch(pr.url + '/reviews')).json();
+          return revs.length > 0 ? 1 : 0;
+        } catch (e) { return 0; }
       });
-      const reviewResults = await Promise.all(reviewPromises);
-      reviewedPRs = reviewResults.reduce((a, b) => a + b, 0);
-      pendingPRs = openPRs.length - reviewedPRs;
-    } else if (!hasRealPRs && openPRs > 0) {
-      reviewedPRs = demoReviews.reviewed;
-      pendingPRs = demoReviews.pending;
-    } else {
-      reviewedPRs = 0; pendingPRs = 0;
-    }
-    reviewReviewedSpan.textContent = reviewedPRs;
-    reviewPendingSpan.textContent = pendingPRs;
-    const reviewPercent = (reviewedPRs + pendingPRs) === 0 ? 0 : (reviewedPRs / (reviewedPRs + pendingPRs)) * 100;
-    reviewProgressBar.style.width = `${reviewPercent}%`;
-    if (!hasRealPRs || !hasRealIssues) showToast('This repo has no real PRs/issues – showing demo data for illustration.', 'info');
-  } catch (error) {
-    console.error('Failed to fetch GitHub activity:', error);
-    showToast(`Could not load data for "${repo}". Using demo data.`, 'error');
-    prOpenSpan.textContent = demoPRs.open;
-    prClosedSpan.textContent = demoPRs.closed;
-    prProgressBar.style.width = `${(demoPRs.closed / (demoPRs.open + demoPRs.closed)) * 100}%`;
-    issuesOpenSpan.textContent = demoIssues.open;
-    issuesClosedSpan.textContent = demoIssues.closed;
-    issuesProgressBar.style.width = `${(demoIssues.closed / (demoIssues.open + demoIssues.closed)) * 100}%`;
-    reviewReviewedSpan.textContent = demoReviews.reviewed;
-    reviewPendingSpan.textContent = demoReviews.pending;
-    reviewProgressBar.style.width = `${(demoReviews.reviewed / (demoReviews.reviewed + demoReviews.pending)) * 100}%`;
+      const results = await Promise.all(reviewPromises);
+      reviewed = results.reduce((a, b) => a + b, 0);
+      pending = openPRs.length - reviewed;
+    } else if (!hasRealPRs && openPRs > 0) { reviewed = demoReviews.reviewed; pending = demoReviews.pending; }
+    revReviewed.textContent = reviewed;
+    revPending.textContent = pending;
+    revProgress.style.width = (reviewed + pending) === 0 ? 0 : (reviewed / (reviewed + pending) * 100) + '%';
+  } catch (e) {
+    showToast('Error loading activity, using demo', 'error');
   }
 }
-refreshBtn.addEventListener('click', fetchGitHubActivity);
-repoInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') fetchGitHubActivity(); });
+refreshBtn?.addEventListener('click', fetchGitHubActivity);
 fetchGitHubActivity();
 
-// ==================== STREAK CALENDAR ====================
+// ========== Testimonials Carousel ==========
+const slides = document.querySelectorAll('.testimonial-card');
+const slideContainer = document.querySelector('.carousel-slide');
+const prev = document.querySelector('.carousel-prev'), next = document.querySelector('.carousel-next');
+let carIndex = 0, carInterval;
+function updateCarousel() { if (slideContainer && slides[0]) slideContainer.style.transform = `translateX(-${carIndex * slides[0].clientWidth}px)`; }
+function updateDots() { document.querySelectorAll('.dot').forEach((d, i) => { if (i === carIndex) d.classList.add('active'); else d.classList.remove('active'); }); }
+function createDots() {
+  const dotsDiv = document.querySelector('.carousel-dots');
+  dotsDiv.innerHTML = '';
+  slides.forEach((_, i) => {
+    const dot = document.createElement('span');
+    dot.classList.add('dot');
+    if (i === carIndex) dot.classList.add('active');
+    dot.addEventListener('click', () => { clearInterval(carInterval); carIndex = i; updateCarousel(); updateDots(); startAutoSlide(); });
+    dotsDiv.appendChild(dot);
+  });
+}
+function nextSlide() { carIndex = (carIndex + 1) % slides.length; updateCarousel(); updateDots(); }
+function prevSlide() { carIndex = (carIndex - 1 + slides.length) % slides.length; updateCarousel(); updateDots(); }
+function startAutoSlide() { carInterval = setInterval(nextSlide, 5000); }
+prev?.addEventListener('click', () => { clearInterval(carInterval); prevSlide(); startAutoSlide(); });
+next?.addEventListener('click', () => { clearInterval(carInterval); nextSlide(); startAutoSlide(); });
+window.addEventListener('resize', updateCarousel);
+if (slides.length) { createDots(); updateCarousel(); startAutoSlide(); }
+
+// ========== Streak Calendar ==========
 const STORAGE_KEY = 'workStreakData';
-function getStreakData() {
-  const defaultData = { dates: [], lastUpdated: null };
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : defaultData;
-}
-function saveStreakData(data) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-}
-function isWorked(dateStr, dates) {
-  return dates.includes(dateStr);
-}
+function getStreakData() { const stored = localStorage.getItem(STORAGE_KEY); return stored ? JSON.parse(stored) : { dates: [], lastUpdated: null }; }
+function saveStreakData(data) { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); }
 function calculateStreak(dates) {
-  if (dates.length === 0) return 0;
+  if (!dates.length) return 0;
   const sorted = [...dates].sort();
   let streak = 0;
-  let currentDate = new Date();
-  currentDate.setHours(0, 0, 0, 0);
+  let today = new Date(); today.setHours(0,0,0,0);
   for (let i = sorted.length - 1; i >= 0; i--) {
-    const date = new Date(sorted[i]);
-    date.setHours(0, 0, 0, 0);
-    const diffDays = Math.floor((currentDate - date) / (1000 * 60 * 60 * 24));
-    if (diffDays === streak) streak++;
+    const d = new Date(sorted[i]); d.setHours(0,0,0,0);
+    const diff = (today - d) / 86400000;
+    if (diff === streak) streak++;
     else break;
   }
   return streak;
@@ -675,36 +380,30 @@ function calculateStreak(dates) {
 function renderCalendar() {
   const data = getStreakData();
   const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-  const calendarDiv = document.getElementById('calendar');
-  if (!calendarDiv) return;
-  calendarDiv.innerHTML = '';
-  const dayNames = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
-  dayNames.forEach(day => {
-    const dayLabel = document.createElement('div');
-    dayLabel.textContent = day;
-    dayLabel.style.textAlign = 'center';
-    dayLabel.style.fontWeight = 'bold';
-    dayLabel.style.color = '#e94560';
-    calendarDiv.appendChild(dayLabel);
+  const y = today.getFullYear(), m = today.getMonth();
+  const firstDay = new Date(y, m, 1).getDay(), daysInMonth = new Date(y, m + 1, 0).getDate();
+  const calDiv = document.getElementById('calendar');
+  if (!calDiv) return;
+  calDiv.innerHTML = '';
+  ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].forEach(d => {
+    const l = document.createElement('div');
+    l.textContent = d;
+    l.style.textAlign = 'center';
+    l.style.fontWeight = 'bold';
+    l.style.color = '#e94560';
+    calDiv.appendChild(l);
   });
-  for (let i = 0; i < firstDay; i++) {
-    const empty = document.createElement('div');
-    calendarDiv.appendChild(empty);
-  }
+  for (let i = 0; i < firstDay; i++) calDiv.appendChild(document.createElement('div'));
   for (let d = 1; d <= daysInMonth; d++) {
-    const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    const worked = isWorked(dateStr, data.dates);
-    const isToday = (today.getFullYear() === currentYear && today.getMonth() === currentMonth && today.getDate() === d);
+    const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+    const worked = data.dates.includes(dateStr);
+    const isToday = today.getDate() === d;
     const dayDiv = document.createElement('div');
     dayDiv.textContent = d;
     dayDiv.classList.add('calendar-day');
     if (worked) dayDiv.classList.add('worked');
     if (isToday) dayDiv.classList.add('today');
-    calendarDiv.appendChild(dayDiv);
+    calDiv.appendChild(dayDiv);
   }
   document.getElementById('current-streak').textContent = calculateStreak(data.dates);
   document.getElementById('total-days').textContent = data.dates.length;
@@ -715,207 +414,222 @@ function markToday() {
   const data = getStreakData();
   if (!data.dates.includes(todayStr)) {
     data.dates.push(todayStr);
-    data.lastUpdated = new Date().toISOString();
     saveStreakData(data);
     renderCalendar();
     showToast('🔥 Day marked! Streak updated.', 'success');
   } else {
-    showToast('Already marked today. Come back tomorrow!', 'info');
+    showToast('Already marked today', 'info');
   }
 }
-function initStreakCalendar() {
-  const markBtn = document.getElementById('mark-today-btn');
-  if (markBtn) {
-    markBtn.addEventListener('click', markToday);
-    renderCalendar();
-  }
-}
-initStreakCalendar();
+document.getElementById('mark-today-btn')?.addEventListener('click', markToday);
+document.getElementById('export-streak-btn')?.addEventListener('click', () => {
+  const data = getStreakData();
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `streak-${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('Exported streak data', 'success');
+});
+renderCalendar();
 
-// ==================== READING TIME FOR BLOG POSTS (Day 21) ====================
-function calculateReadingTime(text, wordsPerMinute = 200) {
-  const words = text.trim().split(/\s+/).length;
-  const minutes = Math.ceil(words / wordsPerMinute);
-  return Math.max(1, minutes);
-}
+// ========== Reading Time ==========
 function addReadingTimes() {
-  const blogCards = document.querySelectorAll('.blog-card');
-  blogCards.forEach(card => {
-    const paragraph = card.querySelector('p:not(.blog-date):not(.reading-time)');
-    if (paragraph) {
-      const text = paragraph.textContent;
-      const minutes = calculateReadingTime(text);
-      const readingTimeSpan = card.querySelector('.reading-time span');
-      if (readingTimeSpan) {
-        readingTimeSpan.textContent = minutes;
-      }
+  document.querySelectorAll('.blog-card').forEach(card => {
+    const p = card.querySelector('p:not(.blog-date):not(.reading-time)');
+    if (p) {
+      const words = p.textContent.trim().split(/\s+/).length;
+      const mins = Math.max(1, Math.ceil(words / 200));
+      const span = card.querySelector('.reading-time span');
+      if (span) span.textContent = mins;
     }
   });
 }
 addReadingTimes();
-    // Day 22: Click on repo name to copy it
-    const repoNameElem = card.querySelector('h3');
-    if (repoNameElem) {
-      repoNameElem.style.cursor = 'pointer';
-      repoNameElem.title = 'Click to copy repository name';
-      repoNameElem.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const repoName = repo.name;
-        navigator.clipboard.writeText(repoName).then(() => {
-          showToast(`📋 Copied "${repoName}" to clipboard!`, 'success');
-        }).catch(() => {
-          showToast('Failed to copy repo name.', 'error');
-        });
-      });
+
+// ========== Visit message & counter ==========
+(function updateVisitMessage() {
+  const span = document.getElementById('visit-message');
+  if (span) {
+    let c = localStorage.getItem('portfolioVisitCount');
+    if (c === null) {
+      c = 1;
+      span.textContent = '✨ Welcome! Thanks for visiting. ✨';
+    } else {
+      c = parseInt(c) + 1;
+      span.textContent = `👋 Welcome back! You've visited ${c} time${c !== 1 ? 's' : ''}.`;
     }
-    // Day 23: Keyboard shortcuts help – press '?' to display all shortcuts
+    localStorage.setItem('portfolioVisitCount', c);
+  }
+})();
+async function updateVisitorCount() {
+  const vSpan = document.getElementById('visitor-count');
+  try {
+    const res = await fetch('https://api.countapi.xyz/hit/sanket_portfolio_final/visitors');
+    const data = await res.json();
+    if (vSpan) vSpan.textContent = data.value;
+  } catch (e) {
+    if (vSpan) vSpan.textContent = '?';
+  }
+}
+updateVisitorCount();
+
+// ========== Copy email & copy link ==========
+document.getElementById('copy-email-btn')?.addEventListener('click', () => {
+  navigator.clipboard.writeText('sanketshirke67@gmail.com').then(() => showToast('📧 Email copied!', 'success')).catch(() => showToast('Failed', 'error'));
+});
+document.getElementById('copy-link-btn')?.addEventListener('click', () => {
+  navigator.clipboard.writeText(window.location.href).then(() => showToast('🔗 Link copied!', 'success')).catch(() => showToast('Failed', 'error'));
+});
+
+// ========== Back to top with smooth animation ==========
+const backBtn = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => { backBtn.style.display = window.scrollY > 300 ? 'flex' : 'none'; });
+const progressCircle = document.querySelector('.progress-ring-circle');
+const radiusVal = 26, circum = 2 * Math.PI * radiusVal;
+progressCircle.style.strokeDasharray = `${circum}`;
+function setProgress(percent) {
+  const offset = circum - (percent / 100) * circum;
+  progressCircle.style.strokeDashoffset = offset;
+  document.querySelector('.scroll-percent').textContent = `${Math.floor(percent)}%`;
+}
+window.addEventListener('scroll', () => {
+  const docH = document.documentElement.scrollHeight - window.innerHeight;
+  const p = (window.scrollY / docH) * 100;
+  setProgress(p);
+});
+backBtn?.addEventListener('click', () => {
+  const start = window.scrollY, duration = 500, startTime = performance.now();
+  function animate(now) {
+    const elapsed = now - startTime;
+    const prog = Math.min(elapsed / duration, 1);
+    const ease = 1 - Math.pow(1 - prog, 3);
+    window.scrollTo(0, start * (1 - ease));
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    setProgress((window.scrollY / docH) * 100);
+    if (prog < 1) requestAnimationFrame(animate);
+    else setProgress(0);
+  }
+  requestAnimationFrame(animate);
+});
+document.querySelector('.scroll-progress')?.addEventListener('click', () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+// ========== Particle background ==========
+const canvas = document.getElementById('particle-canvas');
+if (canvas) {
+  const ctx = canvas.getContext('2d');
+  let particles = [];
+  function resizeCanvas() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas();
+  class Particle {
+    constructor() {
+      this.x = Math.random() * canvas.width;
+      this.y = Math.random() * canvas.height;
+      this.size = Math.random() * 3 + 1;
+      this.speedX = (Math.random() - 0.5) * 1;
+      this.speedY = (Math.random() - 0.5) * 1;
+      this.color = `rgba(233, 69, 96, ${Math.random() * 0.5 + 0.2})`;
+    }
+    update() {
+      this.x += this.speedX;
+      this.y += this.speedY;
+      if (this.x < 0) this.x = canvas.width;
+      if (this.x > canvas.width) this.x = 0;
+      if (this.y < 0) this.y = canvas.height;
+      if (this.y > canvas.height) this.y = 0;
+    }
+    draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fillStyle = this.color; ctx.fill(); }
+  }
+  function initParticles() { particles = []; for (let i = 0; i < 100; i++) particles.push(new Particle()); }
+  function animateParticles() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animateParticles); }
+  initParticles();
+  animateParticles();
+}
+
+// ========== Custom cursor ==========
+const cursor = document.querySelector('.cursor'), cursorFollower = document.querySelector('.cursor-follower');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+  cursorFollower.style.left = e.clientX + 'px';
+  cursorFollower.style.top = e.clientY + 'px';
+});
+document.addEventListener('mouseleave', () => { cursor.style.display = 'none'; cursorFollower.style.display = 'none'; });
+document.addEventListener('mouseenter', () => { cursor.style.display = 'block'; cursorFollower.style.display = 'block'; });
+
+// ========== Keyboard shortcuts ==========
 document.addEventListener('keydown', (e) => {
+  if (e.key === 'd' || e.key === 'D') {
+    e.preventDefault();
+    document.getElementById('theme-toggle').click();
+    showToast('🌓 Dark mode toggled', 'success');
+  }
   if (e.key === '?' || (e.shiftKey && e.key === '/')) {
     e.preventDefault();
-    const shortcuts = [
-      '⌨️ Keyboard Shortcuts:',
-      '🎨 D / d – Toggle dark/light mode',
-      '❓ ? / Shift+/ – Show this help',
-      '📋 Click on any repo name – Copy it',
-      '🎲 Random Project button – Get a random repo',
-      '📧 Copy email button – Copy my address',
-      '🔗 Copy link button – Share this page'
-    ];
-    showToast(shortcuts.join('\n'), 'info');
+    showToast('⌨️ Shortcuts: D (dark mode), L (copy link), R (random project), ? (help)', 'info');
   }
-});
-// Day 24: Press 'L' to copy page link
-document.addEventListener('keydown', (e) => {
   if (e.key === 'l' || e.key === 'L') {
     e.preventDefault();
-    const url = window.location.href;
-    navigator.clipboard.writeText(url).then(() => {
-      showToast('🔗 Page link copied to clipboard!', 'success');
-    }).catch(() => {
-      showToast('Failed to copy link.', 'error');
-    });
+    navigator.clipboard.writeText(window.location.href).then(() => showToast('🔗 Link copied!', 'success')).catch(() => showToast('Failed', 'error'));
   }
-});
-// Day 25: Press 'R' to open a random project
-document.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') {
     e.preventDefault();
-    if (!allRepos || allRepos.length === 0) {
-      showToast('Projects not loaded yet. Please wait.', 'error');
-      return;
-    }
-    const randomIndex = Math.floor(Math.random() * allRepos.length);
-    const randomRepo = allRepos[randomIndex];
-    window.open(randomRepo.html_url, '_blank');
-    showToast(`🎲 Opening random project: ${randomRepo.name}`, 'success');
+    openRandomProject();
   }
 });
-    card.innerHTML = `<i class="fab fa-github"></i><h3>${repo.name}</h3><p>${repo.description || 'No description provided.'}</p><a href="${repo.html_url}" target="_blank">View on GitHub →</a>`;
-    
-    // Day 26: Language badge
-    const langBadge = document.createElement('span');
-    langBadge.className = 'lang-badge';
-    langBadge.textContent = repo.language || 'Unknown';
-    card.querySelector('h3').appendChild(langBadge);
-    
-    // ... rest of the code (details, toggle button, etc.)
-    // Day 27: Animated back to top with progress ring
-backToTopBtn.addEventListener('click', () => {
-  const start = window.scrollY;
-  const duration = 500;
-  const startTime = performance.now();
 
-  function animateScroll(now) {
-    const elapsed = now - startTime;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3); // Cubic ease out
-    window.scrollTo(0, start * (1 - ease));
-    // Update progress ring during scroll
-    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
-    const percent = (window.scrollY / docHeight) * 100;
-    setProgress(percent);
-    if (progress < 1) {
-      requestAnimationFrame(animateScroll);
-    } else {
-      setProgress(0);
-    }
+// ========== Random developer tip on page load ==========
+const tips = ['💡 Tip: Press "?" for shortcuts!', '🔥 Double-click a project card to open repo.', '📋 Click any repo name to copy it.', '⚡ Press "R" for a random project.', '🎨 Press "D" for dark mode.', '📁 Export streak data with the button.', '🚀 "The best way to predict the future is to create it."'];
+setTimeout(() => {
+  const tip = tips[Math.floor(Math.random() * tips.length)];
+  showToast(tip, 'info');
+}, 1000);
+
+// ========== Easter egg: triple click logo ==========
+let clickCount = 0, clickTimer = null;
+const logoDiv = document.querySelector('.logo');
+logoDiv?.addEventListener('click', () => {
+  clickCount++;
+  logoDiv.classList.add('logo-pulse');
+  setTimeout(() => logoDiv.classList.remove('logo-pulse'), 300);
+  clearTimeout(clickTimer);
+  clickTimer = setTimeout(() => clickCount = 0, 800);
+  if (clickCount === 3) {
+    showToast('🎉 You found the secret! Keep learning! 🚀', 'success');
+    clickCount = 0;
   }
-  requestAnimationFrame(animateScroll);
 });
-    // Day 28: Double-click to open repo
-    card.addEventListener('dblclick', () => {
-      window.open(repo.html_url, '_blank');
-      showToast(`🔗 Opening ${repo.name}...`, 'success');
-    });
-    
-    card.innerHTML = `...`;
-    // Day 29: Add last commit date
-    const lastCommitDate = new Date(repo.updated_at);
-    const dateElem = document.createElement('div');
-    dateElem.className = 'last-commit-date';
-    dateElem.innerHTML = `<i class="far fa-calendar-alt"></i> ${lastCommitDate.toLocaleDateString()}`;
-    card.appendChild(dateElem);
-// Day 30: Export streak data as JSON
-const exportBtn = document.getElementById('export-streak-btn');
-if (exportBtn) {
-  exportBtn.addEventListener('click', () => {
-    const data = getStreakData();
-    const dataStr = JSON.stringify(data, null, 2);
-    const blob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `streak-data-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    showToast('📁 Streak data exported!', 'success');
+
+// ========== Scroll fade animations ==========
+const fadeElements = document.querySelectorAll('section, .skill-card, .project-card, .timeline-item, .blog-card');
+fadeElements.forEach(el => el.classList.add('fade-in'));
+const fadeObserver = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('appear');
+      fadeObserver.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.1 });
+fadeElements.forEach(el => fadeObserver.observe(el));
+
+// ========== Contact form (EmailJS – replace with your keys) ==========
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  contactForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    showToast('EmailJS not configured – this would send!', 'info');
   });
 }
-    // Day 31: Store and display last synced time
-    const syncTime = new Date();
-    localStorage.setItem('lastProjectsSync', syncTime.toISOString());
-    const lastSyncedDiv = document.getElementById('last-synced');
-    if (lastSyncedDiv) {
-      lastSyncedDiv.textContent = `🔄 Last synced: ${syncTime.toLocaleString()}`;
-    }
-    // Show previously stored sync time on load
+
+// ========== Load stored last sync display ==========
 const storedSync = localStorage.getItem('lastProjectsSync');
 if (storedSync && document.getElementById('last-synced')) {
   const syncDate = new Date(storedSync);
   document.getElementById('last-synced').textContent = `🔄 Last synced: ${syncDate.toLocaleString()}`;
 }
-function showToast(message, type = 'success') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  
-  // Day 32: Click to dismiss
-  toast.addEventListener('click', () => {
-    toast.remove();
-  });
-  
-  container.appendChild(toast);
-  setTimeout(() => {
-    if (toast.parentNode) toast.remove();
-  }, 4000);
-}
-// Day 33: Random developer tip on page load
-const tips = [
-  '💡 Tip: Press "?" to see all keyboard shortcuts!',
-  '🔥 Tip: Double-click a project card to open the repo.',
-  '📋 Tip: Click any repo name to copy it to clipboard.',
-  '⚡ Tip: Press "R" for a random project.',
-  '🎨 Tip: Press "D" to toggle dark/light mode.',
-  '📁 Tip: Export your streak data with the button in Streak section.',
-  '🔄 Tip: Projects show last synced time – data is fresh!',
-  '🚀 "The best way to predict the future is to create it."',
-  '💻 "Code is like humor. When you have to explain it, it’s bad."',
-  '🌟 "Every expert was once a beginner."'
-];
-const randomTip = tips[Math.floor(Math.random() * tips.length)];
-setTimeout(() => {
-  showToast(randomTip, 'info');
-}, 1000); // Wait 1 second after page loads
